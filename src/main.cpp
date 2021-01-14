@@ -13,25 +13,15 @@
 #include <stdlib.h>
 
 const char *program_name = "GLFW window";
-int window_width = 1200,
-    window_height = 800;
+const char *glsl_version = "#version 330";
+int32_t window_width = 1200;
+int32_t window_height = 800;
 RGBA background_color{0.1f, 0.3f, 0.2f, 1.0f};
 
-static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
+static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+void teardown(GLFWwindow *window);
 
-void teardown(GLFWwindow *window)
-{
-    if (window != NULL)
-    {
-        glfwDestroyWindow(window);
-    }
-    glfwTerminate();
-}
-
-int main(int argc, char *argv[])
+int main()
 {
     if (!glfwInit())
     {
@@ -44,36 +34,17 @@ int main(int argc, char *argv[])
     }
 
     // setup GLFW window
-
     glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
     glfwWindowHint(GLFW_DEPTH_BITS, 24);
     glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    std::string glsl_version = "";
-#ifdef __APPLE__
-    // GL 3.2 + GLSL 150
-    glsl_version = "#version 150";
-    glfwWindowHint( // required on Mac OS
-        GLFW_OPENGL_FORWARD_COMPAT,
-        GL_TRUE);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-#elif __linux__
-    // GL 3.2 + GLSL 150
-    glsl_version = "#version 150";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-#elif _WIN32
-    // GL 3.0 + GLSL 130
-    glsl_version = "#version 130";
+    // GL 3.0 + GLSL 330
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-#endif
 
     float highDPIscaleFactor = 1.0;
-#ifdef _WIN32
     // if it's a HighDPI monitor, try to scale everything
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
     float xscale, yscale;
@@ -83,10 +54,6 @@ int main(int argc, char *argv[])
         highDPIscaleFactor = xscale;
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
     }
-#elif __APPLE__
-    // to prevent 1200x800 from becoming 2400x1600
-    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
-#endif
 
     GLFWwindow *window = glfwCreateWindow(window_width, window_height, program_name, NULL, NULL);
     if (!window)
@@ -125,31 +92,24 @@ int main(int argc, char *argv[])
     (void)io;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
+        
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+    // ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version.c_str());
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Read 'docs/FONTS.md' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     _chdir("W:\\opengl_test\\assets");
-    ImFont *current_font;
+    ImFont *some_font;
     // io.Fonts->AddFontDefault();
     // io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-Medium.ttf", 16.0f);
     // io.Fonts->AddFontFromFileTTF("../assets/fonts/Cousine-Regular.ttf", 15.0f);
     // io.Fonts->AddFontFromFileTTF("../assets/fonts/DroidSans.ttf", 16.0f);
     // io.Fonts->AddFontFromFileTTF("../assets/fonts/ProggyTiny.ttf", 10.0f);
-    current_font = io.Fonts->AddFontFromFileTTF("fonts/ArialUnicodeMS.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-    IM_ASSERT(current_font != NULL);
+    some_font = io.Fonts->AddFontFromFileTTF("fonts/ArialUnicodeMS.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    IM_ASSERT(some_font != NULL);
 
     // Our state
     bool show_demo_window = true;
@@ -222,4 +182,18 @@ int main(int argc, char *argv[])
     teardown(window);
 
     return 0;
+}
+
+static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+void teardown(GLFWwindow *window)
+{
+    if (window != NULL)
+    {
+        glfwDestroyWindow(window);
+    }
+    glfwTerminate();
 }
