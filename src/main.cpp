@@ -18,8 +18,17 @@ int32_t window_width = 1200;
 int32_t window_height = 800;
 RGBA background_color{0.1f, 0.3f, 0.2f, 1.0f};
 
+struct Imgui_Data
+{
+    bool show_demo_window;
+    bool show_another_window;
+    float some_float;
+    int some_counter;
+} imgui_data = { true, true, 0.0f, 0 };
+
 static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void teardown(GLFWwindow *window);
+void do_imgui_stuff(Imgui_Data *imgui_data);
 
 int main()
 {
@@ -111,65 +120,17 @@ int main()
     some_font = io.Fonts->AddFontFromFileTTF("fonts/ArialUnicodeMS.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     IM_ASSERT(some_font != NULL);
 
-    // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
     // --- rendering loop
     while (!glfwWindowShouldClose(window))
     {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
 
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        // do_imgui_stuff(&imgui_data);
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float *)&background_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
-
-        // Rendering
-        ImGui::Render();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+        glViewport(0, 0, window_width, window_height);
         glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -196,4 +157,50 @@ void teardown(GLFWwindow *window)
         glfwDestroyWindow(window);
     }
     glfwTerminate();
+}
+
+void do_imgui_stuff(Imgui_Data *imgui_data)
+{
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+    if (imgui_data->show_demo_window)
+        ImGui::ShowDemoWindow(&imgui_data->show_demo_window);
+
+    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+    {
+        ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+
+        ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
+        ImGui::Checkbox("Demo Window", &imgui_data->show_demo_window); // Edit bools storing our window open/close state
+        ImGui::Checkbox("Another Window", &imgui_data->show_another_window);
+
+        ImGui::SliderFloat("float", &imgui_data->some_float, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("clear color", (float *)&background_color); // Edit 3 floats representing a color
+
+        if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+            imgui_data->some_counter++;
+        ImGui::SameLine();
+        ImGui::Text("counter = %d", imgui_data->some_counter);
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
+    }
+
+    // 3. Show another simple window.
+    if (imgui_data->show_another_window)
+    {
+        ImGui::Begin("Another Window", &imgui_data->show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+        ImGui::Text("Hello from another window!");
+        if (ImGui::Button("Close Me"))
+            imgui_data->show_another_window = false;
+        ImGui::End();
+    }
+
+    // Rendering
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
