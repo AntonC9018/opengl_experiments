@@ -59,22 +59,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../includes;./src;./src/imgui;./src/imgui/backends;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../includes;../includes/imgui;../includes/imgui/backends;</IncludePath>
     <LibraryPath>../libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../includes;./src;./src/imgui;./src/imgui/backends;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../includes;../includes/imgui;../includes/imgui/backends;</IncludePath>
     <LibraryPath>../libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../includes;./src;./src/imgui;./src/imgui/backends;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../includes;../includes/imgui;../includes/imgui/backends;</IncludePath>
     <LibraryPath>../libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../includes;./src;./src/imgui;./src/imgui/backends;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../includes;../includes/imgui;../includes/imgui/backends;</IncludePath>
     <LibraryPath>../libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -146,16 +146,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\glad.c" />
-    <ClCompile Include="src\imgui\backends\imgui_impl_glfw.cpp" />
-    <ClCompile Include="src\imgui\backends\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="src\imgui\backends\imgui_impl_win32.cpp" />
-    <ClCompile Include="src\imgui\imgui.cpp" />
-    <ClCompile Include="src\imgui\imgui_demo.cpp" />
-    <ClCompile Include="src\imgui\imgui_draw.cpp" />
-    <ClCompile Include="src\imgui\imgui_tables.cpp" />
-    <ClCompile Include="src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="..\includes\glad.c" />
+    <ClCompile Include="..\includes\imgui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\includes\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\includes\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\includes\imgui\imgui.cpp" />
+    <ClCompile Include="..\includes\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\includes\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\includes\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\includes\imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
