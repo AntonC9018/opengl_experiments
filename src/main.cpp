@@ -11,12 +11,13 @@
 #include "rgb.h"
 #include <direct.h>
 #include <stdlib.h>
+#include <FreeImage.h>
 
 const char *program_name = "GLFW window";
 const char *glsl_version = "#version 330";
 int32_t window_width = 1200;
 int32_t window_height = 800;
-RGBA background_color{0.1f, 0.3f, 0.2f, 1.0f};
+RGBA background_color{1.0f, 0.0f, 0.0f, 1.0f};
 
 struct Imgui_Data
 {
@@ -93,6 +94,36 @@ int main()
     int actual_window_width, actual_window_height;
     glfwGetWindowSize(window, &actual_window_width, &actual_window_height);
     glViewport(0, 0, actual_window_width, actual_window_height);
+    
+    {
+        // Save a red background as a bmp file
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        GLFWwindow *offscreen_window = glfwCreateWindow(window_width, window_height, "", NULL, NULL);
+        glfwMakeContextCurrent(offscreen_window);
+        glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Make the BYTE array, factor of 3 because it's RBG.
+        BYTE *pixels = (BYTE*)malloc(3 * window_width * window_height);
+
+        // Save the buffer in memory as BGR and not RGB, since B and R get swapped when saving as bmps. 
+        glReadPixels(0, 0, window_width, window_height, GL_BGR, GL_UNSIGNED_BYTE, pixels);
+
+        {
+            // Convert to FreeImage format & save to file
+            FIBITMAP* image = FreeImage_ConvertFromRawBits(pixels, window_width, window_height, 
+                3 * window_width, 24, 0, 0, 0, false);
+            FreeImage_Save(FIF_BMP, image, "D:/Coding/C++/out1.bmp", 0);
+            // Free resources
+            FreeImage_Unload(image);
+        }
+
+        free(pixels);
+
+        glfwDestroyWindow(offscreen_window);
+        glfwMakeContextCurrent(window);
+    }
+
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
