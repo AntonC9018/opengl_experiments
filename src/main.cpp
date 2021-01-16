@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 // GLFW
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -21,11 +22,13 @@
 #endif
 // My stuff
 #include "rgb.h"
+#define internal static 
+#define local_persistent static 
 
 const char *program_name = "GLFW window";
 const char *glsl_version = "#version 330";
-int32_t window_width = 1200;
-int32_t window_height = 800;
+int32_t initial_window_width = 1200;
+int32_t initial_window_height = 800;
 RGBA background_color{0.2f, 0.3f, 0.2f, 1.0f};
 
 struct Imgui_Data
@@ -36,9 +39,13 @@ struct Imgui_Data
     int some_counter;
 } imgui_data = { true, true, 0.0f, 0 };
 
-static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+internal void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void teardown(GLFWwindow *window);
 void do_imgui_stuff(Imgui_Data *imgui_data);
+
+// WARNING: could write to bytes after the buffer, no bound checks are being performed! 
+// returns -1 if something went wrong.
+int read_entire_file(const char* fname, char* buffer);
 
 int main()
 {
@@ -76,7 +83,7 @@ int main()
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
     }
 
-    GLFWwindow *window = glfwCreateWindow(window_width, window_height, program_name, NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(initial_window_width, initial_window_height, program_name, NULL, NULL);
     if (!window)
     {
         fputs("[ERROR] Couldn't create a GLFW window\n", stderr);
@@ -107,17 +114,81 @@ int main()
         glViewport(0, 0, actual_window_width, actual_window_height);
     }
 
-    // if (0)
+    uint32_t shader_program = glCreateProgram();
+
+    {
+        char source_buffer[1024] = {0};
+        int success;
+        char *infoLog = source_buffer;
+
+        if (read_entire_file("shader_src/grid.vs", source_buffer))
+        {
+            fputs("[ERROR] Yikes! Couldn't load the vertex shader", stderr);
+            teardown(window);
+            return -1;
+        }
+
+        uint32_t vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+        auto src = static_cast<const char*>(source_buffer);
+        glShaderSource(vertex_shader, 1, &src, NULL);
+        glCompileShader(vertex_shader);
+
+        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(vertex_shader, 512, NULL, infoLog);
+            puts("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n");
+            return -1;
+        }
+
+        if (read_entire_file("shader_src/grid.fs", source_buffer))
+        {
+            fputs("[ERROR] Yikes! Couldn't load the fragment shader", stderr);
+            teardown(window);
+            return -1;
+        }
+
+        uint32_t fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment_shader, 1, &src, 0);
+        glCompileShader(fragment_shader);
+
+        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(fragment_shader, 512, NULL, infoLog);
+            puts("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n");
+            return -1;
+        }
+
+        glAttachShader(shader_program, fragment_shader);
+        glAttachShader(shader_program, vertex_shader);
+        glLinkProgram(shader_program);
+        // check for linking errors
+        glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+        if (!success) {
+            glGetProgramInfoLog(shader_program, 512, NULL, infoLog);
+            puts("ERROR::SHADER::PROGRAM::LINKING_FAILED\n");
+            puts(infoLog);
+            return -1;
+        }
+
+        glUseProgram(shader_program);
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
+    }
+
+
+    if (0)
     {
         // Save a red background as a bmp file
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-        GLFWwindow *offscreen_window = glfwCreateWindow(window_width, window_height, "", NULL, NULL);
+        GLFWwindow *offscreen_window = glfwCreateWindow(initial_window_width, initial_window_height, "", NULL, NULL);
         glfwMakeContextCurrent(offscreen_window);
         glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Make the BYTE array, factor of 3 because it's RBG.
-        BYTE *pixels = (BYTE*)malloc(3 * window_width * window_height);
+        BYTE *pixels = (BYTE*)malloc(3 * initial_window_width * initial_window_height);
 
 #if USE_FREE_IMAGE
         {
@@ -137,12 +208,12 @@ int main()
 #else
         {
             // However, this one works right with RGB!
-            glReadPixels(0, 0, window_width, window_height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+            glReadPixels(0, 0, initial_window_width, initial_window_height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
             // This writes a weird image for some reason, there are no docs on this function and the 
             // source code is too cryptic. So I guess I'm just not going to use it.
             // New Info: the `comp` parameter means the number of channels, which should be 3. It works!
-            stbi_write_bmp("out1.bmp", window_width, window_height, 3, pixels);
+            stbi_write_bmp("out1.bmp", initial_window_width, initial_window_height, 3, pixels);
 
             // This also works
             // stbi_write_png("out1.png", window_width, window_height, 3, pixels, window_width * 3);
@@ -181,17 +252,48 @@ int main()
     some_font = io.Fonts->AddFontFromFileTTF("fonts/ArialUnicodeMS.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     IM_ASSERT(some_font != NULL);
 
-    // --- rendering loop
+    float vertex_data[] = {
+         0.5f,  0.5f, 0.0f,  // top right
+         0.5f, -0.5f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f,  // bottom left
+        -0.5f,  0.5f, 0.0f   // top left
+    };
+
+    uint32_t indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    uint32_t vao, vbo, ebo;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12, 0);
+    glEnableVertexAttribArray(0);
+
+    // The Render Loop
     while (!glfwWindowShouldClose(window))
     {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
 
         // do_imgui_stuff(&imgui_data);
-
-        glViewport(0, 0, window_width, window_height);
         glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(shader_program);
+        glBindVertexArray(vao);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        // glDrawArrays(GL_TRIANGLES, 0, 3);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -206,7 +308,25 @@ int main()
     return 0;
 }
 
-static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+int read_entire_file(const char* fname, char* buffer)
+{
+    FILE* vertex_shader_file = fopen(fname, "r");
+    if (!vertex_shader_file)
+    {
+        return -1;
+    }
+    char ch;
+    int i = 0;
+    while((ch = getc(vertex_shader_file)) != EOF) {
+        buffer[i] = ch;
+        i++;
+    }
+    buffer[i] = 0;
+    fclose(vertex_shader_file);
+    return 0;
+}
+
+internal void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
