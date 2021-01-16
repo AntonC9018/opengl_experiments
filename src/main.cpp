@@ -1,17 +1,26 @@
-// C++
-#include <string>
-#include <iostream>
 // GLFW
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // ImGui
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-// Other stuff
-#include "rgb.h"
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+// C stuff
 #include <direct.h>
 #include <stdlib.h>
-#include <FreeImage.h>
+#include <stdio.h>
+// Images (use one of these)
+#define USE_FREE_IMAGE true
+#if USE_FREE_IMAGE
+    // Required to be linked both statically and dynamically in order to work, for some reason.
+    #include <FreeImage.h>
+#else
+    #define STB_IMAGE_IMPLEMENTATION
+    #include <stb_image.h>
+    #define STB_IMAGE_WRITE_IMPLEMENTATION
+    #include <stb_image_write.h>
+#endif
+// My stuff
+#include "rgb.h"
 
 const char *program_name = "GLFW window";
 const char *glsl_version = "#version 330";
@@ -90,11 +99,15 @@ int main()
     }
 
     printf("[INFO] OpenGL from glad %i.%i\n", GLVersion.major, GLVersion.minor);
+    {
+        int actual_window_width, actual_window_height;
+        glfwGetWindowSize(window, &actual_window_width, &actual_window_height);
+        glViewport(0, 0, actual_window_width, actual_window_height);
+    }
 
-    int actual_window_width, actual_window_height;
-    glfwGetWindowSize(window, &actual_window_width, &actual_window_height);
-    glViewport(0, 0, actual_window_width, actual_window_height);
     
+
+    if (0)
     {
         // Save a red background as a bmp file
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -106,9 +119,13 @@ int main()
         // Make the BYTE array, factor of 3 because it's RBG.
         BYTE *pixels = (BYTE*)malloc(3 * window_width * window_height);
 
-        // Save the buffer in memory as BGR and not RGB, since B and R get swapped when saving as bmps. 
+        // Save the buffer in memory as BGR and not RGB, since B and R get swapped when saving as bmps.
+        // Found out this has to do with endianness, which makes sense. The strange thing is that 
+        // changing blue/red channel masks 0xFF0000 vs 0x0000FF doesn't change the output, neither does 
+        // any combination of them make any difference. Is it a bug, or am I missing something?
         glReadPixels(0, 0, window_width, window_height, GL_BGR, GL_UNSIGNED_BYTE, pixels);
 
+#if USE_FREE_IMAGE
         {
             // Convert to FreeImage format & save to file
             FIBITMAP* image = FreeImage_ConvertFromRawBits(pixels, window_width, window_height, 
@@ -117,6 +134,13 @@ int main()
             // Free resources
             FreeImage_Unload(image);
         }
+#else
+        {
+            // This writes a weird image for some reason, there are no docs on this function and the 
+            // source code is too cryptic. So I guess I'm just not going to use it.
+            stbi_write_bmp("D:/Coding/C++/out1.bmp", window_width, window_height, 1, pixels);
+        }
+#endif
 
         free(pixels);
 
