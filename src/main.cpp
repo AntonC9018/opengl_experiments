@@ -9,15 +9,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 // Images (use one of these)
-#define USE_FREE_IMAGE true
+#define USE_FREE_IMAGE false
 #if USE_FREE_IMAGE
     // Required to be linked both statically and dynamically in order to work, for some reason.
     #include <FreeImage.h>
 #else
     #define STB_IMAGE_IMPLEMENTATION
-    #include <stb_image.h>
+    #include <stb/stb_image.h>
     #define STB_IMAGE_WRITE_IMPLEMENTATION
-    #include <stb_image_write.h>
+    #include <stb/stb_image_write.h>
 #endif
 // My stuff
 #include "rgb.h"
@@ -26,7 +26,7 @@ const char *program_name = "GLFW window";
 const char *glsl_version = "#version 330";
 int32_t window_width = 1200;
 int32_t window_height = 800;
-RGBA background_color{1.0f, 0.0f, 0.0f, 1.0f};
+RGBA background_color{0.2f, 0.3f, 0.2f, 1.0f};
 
 struct Imgui_Data
 {
@@ -42,6 +42,8 @@ void do_imgui_stuff(Imgui_Data *imgui_data);
 
 int main()
 {
+    _chdir("W:\\opengl_test\\assets");
+
     if (!glfwInit())
     {
         fputs("[ERROR] Couldn't initialize GLFW", stderr);
@@ -105,9 +107,7 @@ int main()
         glViewport(0, 0, actual_window_width, actual_window_height);
     }
 
-    
-
-    if (0)
+    // if (0)
     {
         // Save a red background as a bmp file
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -119,26 +119,33 @@ int main()
         // Make the BYTE array, factor of 3 because it's RBG.
         BYTE *pixels = (BYTE*)malloc(3 * window_width * window_height);
 
-        // Save the buffer in memory as BGR and not RGB, since B and R get swapped when saving as bmps.
-        // Found out this has to do with endianness, which makes sense. The strange thing is that 
-        // changing blue/red channel masks 0xFF0000 vs 0x0000FF doesn't change the output, neither does 
-        // any combination of them make any difference. Is it a bug, or am I missing something?
-        glReadPixels(0, 0, window_width, window_height, GL_BGR, GL_UNSIGNED_BYTE, pixels);
-
 #if USE_FREE_IMAGE
         {
+            // Save the buffer in memory as BGR and not RGB, since B and R get swapped when saving as bmps.
+            // Found out this has to do with endianness, which makes sense. The strange thing is that 
+            // changing blue/red channel masks 0xFF0000 vs 0x0000FF doesn't change the output, neither does 
+            // any combination of them make any difference. Is it a bug, or am I missing something?
+            glReadPixels(0, 0, window_width, window_height, GL_BGR, GL_UNSIGNED_BYTE, pixels);
+
             // Convert to FreeImage format & save to file
             FIBITMAP* image = FreeImage_ConvertFromRawBits(pixels, window_width, window_height, 
                 3 * window_width, 24, 0, 0, 0, false);
-            FreeImage_Save(FIF_BMP, image, "D:/Coding/C++/out1.bmp", 0);
+            FreeImage_Save(FIF_BMP, image, "out1.bmp", 0);
             // Free resources
             FreeImage_Unload(image);
         }
 #else
         {
+            // However, this one works right with RGB!
+            glReadPixels(0, 0, window_width, window_height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
             // This writes a weird image for some reason, there are no docs on this function and the 
             // source code is too cryptic. So I guess I'm just not going to use it.
-            stbi_write_bmp("D:/Coding/C++/out1.bmp", window_width, window_height, 1, pixels);
+            // New Info: the `comp` parameter means the number of channels, which should be 3. It works!
+            stbi_write_bmp("out1.bmp", window_width, window_height, 3, pixels);
+
+            // This also works
+            // stbi_write_png("out1.png", window_width, window_height, 3, pixels, window_width * 3);
         }
 #endif
 
@@ -165,7 +172,6 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    _chdir("W:\\opengl_test\\assets");
     ImFont *some_font;
     // io.Fonts->AddFontDefault();
     // io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-Medium.ttf", 16.0f);
