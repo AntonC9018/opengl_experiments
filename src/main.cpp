@@ -2,9 +2,15 @@
 // GLFW
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 // ImGui
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+// // Assimp
+// #include <assimp/Importer.hpp>
+// #include <assimp/scene.h>
+// #include <assimp/postprocess.h>
+#include <obj_loader.h>
 // C stuff
 #include <direct.h>
 #include <stdlib.h>
@@ -27,7 +33,7 @@
 
 const char *program_name = "GLFW window";
 const char *glsl_version = "#version 330";
-int32_t initial_window_width = 1200;
+int32_t initial_window_width = 800;
 int32_t initial_window_height = 800;
 RGBA background_color{0.2f, 0.3f, 0.2f, 1.0f};
 
@@ -253,33 +259,140 @@ int main()
     IM_ASSERT(some_font != NULL);
 
     float board_dimension = 8.0f;
+    uint32_t board_vao;
+    glGenVertexArrays(1, &board_vao);
 
-    float vertex_data[] = {
-        0.0f, 0.0f, 0.0f,
-        board_dimension, 0.0f, 0.0f,
-        board_dimension, board_dimension, 0.0f,
-        0.0f, board_dimension, 0.0f
-    };
+    {
+        uint32_t vbo, ebo;
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
 
-    uint32_t indices[] = {
-        0, 1, 2,
-        2, 3, 4
-    };
+        float vertex_data[] = {
+            0.0f, 0.0f, 0.0f,
+            board_dimension, 0.0f, 0.0f,
+            board_dimension, board_dimension, 0.0f,
+            0.0f, board_dimension, 0.0f
+        };
 
-    uint32_t vao, vbo, ebo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
+        uint32_t indices[] = {
+            0, 1, 2,
+            2, 3, 4
+        };
 
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
+        glBindVertexArray(board_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12, 0);
-    glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12, 0);
+        glEnableVertexAttribArray(0);
+    }
+
+    uint32_t pawn_vao;
+    int32_t triangle_count;
+    uint32_t pawn_shader_program = glCreateProgram();
+
+    glGenVertexArrays(1, &pawn_vao);
+    glBindVertexArray(pawn_vao);
+
+    {
+        /*
+            Assimp::Importer importer;
+            auto scene = importer.ReadFile("models/pawn.obj", 0);
+            if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
+            {
+                fprintf(stderr, "ERROR::ASSIMP::%s", importer.GetErrorString());
+                return -1;
+            }
+
+            // uint32_t mesh_index = scene->mRootNode->mMeshes[0];
+            auto mesh = scene->mMeshes[0];
+        */
+
+        objl::Loader loader;
+        if (!loader.LoadFile("models/pawn.obj"))
+        {
+            fprintf(stderr, "Error loading the pawn mesh");
+        }
+        triangle_count = loader.LoadedIndices.size() / 3;
+
+        uint32_t vbo, ebo;
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+
+        auto vertices = (float*)malloc(12 * loader.LoadedVertices.size());
+        for (int i = 0; i < loader.LoadedVertices.size(); i++)
+        {
+            memcpy(&vertices[i*3], &loader.LoadedVertices[i].Position, 12);
+        }
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, 12 * loader.LoadedVertices.size(), vertices, GL_STATIC_DRAW);
+
+        // free(vertices);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, loader.LoadedIndices.size(), loader.LoadedIndices.data(), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12, 0);
+        glEnableVertexAttribArray(0);
+        // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 
+        //     sizeof(objl::Vertex), (void*)offsetof(objl::Vertex, objl::Vertex::Position));
+        // glEnableVertexAttribArray(1);
+        // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 
+        //     sizeof(objl::Vertex), (void*)offsetof(objl::Vertex, objl::Vertex::TextureCoordinate));
+        // glEnableVertexAttribArray(2);
+
+        char source_buffer[1024] = {0};
+        int success;
+        char *infoLog = source_buffer;
+        auto src = static_cast<const char*>(source_buffer);
+
+        if (read_entire_file("shader_src/copy.vs", source_buffer))
+        {
+            fputs("[ERROR] Yikes! Couldn't load the vertex shader", stderr);
+            teardown(window);
+            return -1;
+        }
+        uint32_t vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertex_shader, 1, &src, 0);
+        glCompileShader(vertex_shader);
+
+        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(vertex_shader, 512, NULL, infoLog);
+            puts("ERROR::SHADER::vertex::COMPILATION_FAILED\n");
+            return -1;
+        }
+
+        if (read_entire_file("shader_src/copy.fs", source_buffer))
+        {
+            fputs("[ERROR] Yikes! Couldn't load the fragment shader", stderr);
+            teardown(window);
+            return -1;
+        }
+        uint32_t fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment_shader, 1, &src, 0);
+        glCompileShader(fragment_shader);
+
+        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(fragment_shader, 512, NULL, infoLog);
+            puts("ERROR::SHADER::fragment::COMPILATION_FAILED\n");
+            return -1;
+        }
+
+        glAttachShader(pawn_shader_program, vertex_shader);
+        glAttachShader(pawn_shader_program, fragment_shader);
+        glLinkProgram(pawn_shader_program);
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
+    }
+
 
     // The Render Loop
     while (!glfwWindowShouldClose(window))
@@ -291,11 +404,14 @@ int main()
         glClearColor(background_color.r, background_color.g, background_color.b, background_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shader_program);
-        glUniform1f(0, board_dimension);
-        glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
+        // glUseProgram(shader_program);
+        // glUniform1f(0, board_dimension);
+        // glBindVertexArray(board_vao);
+        // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glUseProgram(pawn_shader_program);
+        glBindVertexArray(pawn_vao);
+        glDrawElements(GL_TRIANGLES, triangle_count * 3, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
