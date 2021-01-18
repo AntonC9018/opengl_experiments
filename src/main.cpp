@@ -252,16 +252,18 @@ int main()
     some_font = io.Fonts->AddFontFromFileTTF("fonts/ArialUnicodeMS.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     IM_ASSERT(some_font != NULL);
 
+    float board_dimension = 8.0f;
+
     float vertex_data[] = {
-         0.5f,  0.5f, 0.0f,  // top right
-         0.5f, -0.5f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  // bottom left
-        -0.5f,  0.5f, 0.0f   // top left
+        0.0f, 0.0f, 0.0f,
+        board_dimension, 0.0f, 0.0f,
+        board_dimension, board_dimension, 0.0f,
+        0.0f, board_dimension, 0.0f
     };
 
     uint32_t indices[] = {
         0, 1, 2,
-        2, 3, 0
+        2, 3, 4
     };
 
     uint32_t vao, vbo, ebo;
@@ -290,6 +292,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shader_program);
+        glUniform1f(0, board_dimension);
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         // glDrawArrays(GL_TRIANGLES, 0, 3);
