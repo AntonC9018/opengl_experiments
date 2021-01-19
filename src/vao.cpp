@@ -65,7 +65,6 @@ uint32_t create_pawn_vao(int32_t &triangle_count)
 
         auto &attrib = reader.GetAttrib();
         auto &shapes = reader.GetShapes();
-
         triangle_count = shapes[0].mesh.indices.size() / 3;
         uint32_t num_indices = shapes[0].mesh.indices.size();
         uint32_t *indices = (uint32_t*)malloc(num_indices * 4); 
@@ -74,18 +73,27 @@ uint32_t create_pawn_vao(int32_t &triangle_count)
             indices[i] = shapes[0].mesh.indices[i].vertex_index;
         }
 
-        uint32_t vbo, ebo;
-        glGenBuffers(1, &vbo);
-        glGenBuffers(1, &ebo);
+        static const uint32_t vbo = 0, nbo = 1, tbo = 2, ebo = 3;
+        uint32_t bufs[4] = {0};
+        glGenBuffers(4, bufs);
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, bufs[vbo]);
         glBufferData(GL_ARRAY_BUFFER, attrib.vertices.size() * 4, attrib.vertices.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(vbo);
+        glVertexAttribPointer(vbo, 3, GL_FLOAT, GL_FALSE, 12, 0);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBindBuffer(GL_ARRAY_BUFFER, bufs[nbo]);
+        glBufferData(GL_ARRAY_BUFFER, attrib.normals.size() * 4, attrib.normals.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(nbo);
+        glVertexAttribPointer(nbo, 3, GL_FLOAT, GL_FALSE, 12, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, bufs[tbo]);
+        glBufferData(GL_ARRAY_BUFFER, attrib.texcoords.size() * 4, attrib.texcoords.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(tbo);
+        glVertexAttribPointer(tbo, 2, GL_FLOAT, GL_FALSE, 8, 0);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs[ebo]);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_indices * 4, indices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12, 0);
-        glEnableVertexAttribArray(0);
     }
 
     return pawn_vao;
