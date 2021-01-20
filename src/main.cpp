@@ -30,7 +30,7 @@ int main()
     uint32_t board_vao = create_board_vao(board_dimension);
     uint32_t board_shader_program = create_shader_program("shader_src/grid.vs", "shader_src/grid.fs");
 
-    Imgui_Data imgui_data = {{0.2f, 0.3f, 0.2f, 1.0f}, 0.5f, 1, 0, false, true, 5.0f, glm::identity<glm::quat>()};
+    Imgui_Data imgui_data = {{0.2f, 0.3f, 0.2f, 1.0f}, 0.5f, 1, 0, false, true, 5.0f, glm::identity<glm::quat>(), 50.0f};
 
     uint32_t pawn_vao = create_pawn_vao(imgui_data.max_triangles);
     uint32_t pawn_shader_program = create_shader_program("shader_src/pawn.vs", "shader_src/pawn.fs");
@@ -49,7 +49,7 @@ int main()
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // glEnable(GL_DEPTH_TEST);
+        glEnable(GL_DEPTH_TEST);
         
         if (imgui_data.show_grid)
         {
@@ -77,6 +77,9 @@ int main()
             glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)&view); 
             auto projection_loc = glGetUniformLocation(pawn_shader_program, "projection");
             glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)&projection);
+            auto light_position_loc = glGetUniformLocation(pawn_shader_program, "light_position");
+            auto ligh_pos = glm::vec3(0.0f, 10.0f, 0.0f);
+            glUniform3fv(light_position_loc, 1, (float*)&ligh_pos);
 
             glBindVertexArray(pawn_vao);
             glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);
