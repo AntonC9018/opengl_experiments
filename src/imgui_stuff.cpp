@@ -46,7 +46,10 @@ void do_imgui_stuff(Imgui_Data *imgui_data)
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::Checkbox("Show grid", &imgui_data->show_grid);
         ImGui::SliderFloat("Pawn Scale", &imgui_data->pawn_scale, 0.0f, 1.0f);
+        ImGui::SliderFloat4("Pawn Rotation: ", (float*)&imgui_data->pawn_rotation, -1.0f, 1.0f);
         ImGui::SliderInt("Pawn triangle count", &imgui_data->num_triangles, 1, imgui_data->max_triangles);
+        ImGui::SliderFloat("Distance to pawn", &imgui_data->distance_to_pawn, 0.0f, 15.0f);
+        ImGui::SliderFloat("FOV", &imgui_data->fov, 0.0f, 180.0f);
         ImGui::Checkbox("Show pawn", &imgui_data->show_pawn);
         ImGui::ColorEdit3("Clear Color", &imgui_data->background_color.r);
         ImGui::End();

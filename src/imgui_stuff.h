@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <glm/gtc/quaternion.hpp>
 #include "rgb.h"
 
 struct Imgui_Data
@@ -13,6 +14,9 @@ struct Imgui_Data
     int max_triangles;
     bool show_grid;
     bool show_pawn;
+    float distance_to_pawn;
+    glm::quat pawn_rotation;
+    float fov;
 };
 
 void configure_imgui(GLFWwindow *window);
