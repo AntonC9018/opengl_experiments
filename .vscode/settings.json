@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "xiosbase": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "xhash": "cpp",
+        "xtree": "cpp",
+        "algorithm": "cpp"
     }
 }

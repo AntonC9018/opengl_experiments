@@ -83,6 +83,7 @@ int main()
 
             glBindVertexArray(pawn_vao);
             glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);
+            // glDrawArrays(GL_TRIANGLES, 0, imgui_data.num_triangles * 3);
         }
 
         do_imgui_stuff(&imgui_data);
