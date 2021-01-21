@@ -24,8 +24,8 @@ int read_entire_file(const char *fname, char *buffer)
     return 0;
 }
 
-#define MAX_SHADER_FILE_SIZE 1024
-#define GL_ERROR_LOG_LENGTH 1024
+#define MAX_SHADER_FILE_SIZE 2048
+#define GL_ERROR_LOG_LENGTH 2048
 
 bool maybe_log_shader_error(uint32_t shader, GLenum error_type)
 {
