@@ -14,7 +14,8 @@
 #define local_persistent static
 #include "rgb.h"
 #include "shader.h"
-#include "shader_programs.h"
+#include "descriptors/generic.h"
+#include "descriptors/grid.h"
 #include "imgui_stuff.h"
 #include "gl_init.h"
 #include "image_saving.h"
@@ -30,7 +31,7 @@ int main()
     float board_dimension = 8.0f;
     uint32_t board_vao = create_board_vao(board_dimension);
     uint32_t board_shader_program_id = create_shader_program("shader_src/grid.vs", "shader_src/grid.fs");
-    Board_Program board_program;
+    Grid_Shader board_program;
     board_program.id = board_shader_program_id;
     board_program.set_locations();
 
@@ -39,7 +40,7 @@ int main()
     uint32_t pawn_vao = create_pawn_vao(imgui_data.max_triangles);
     uint32_t pawn_shader_program_id = create_shader_program("shader_src/generic.vs", "shader_src/generic.fs");
     imgui_data.num_triangles = imgui_data.max_triangles;
-    Pawn_Program pawn_program;
+    Generic_Shader pawn_program;
     pawn_program.id = pawn_shader_program_id;
     pawn_program.set_locations();    
 
@@ -76,7 +77,7 @@ int main()
         if (imgui_data.show_grid)
         {
             board_program.use();
-            board_program.uniforms(board_model, view, projection, light_position, board_dimension);
+            board_program.uniforms(board_dimension, light_position, board_model, view, projection);
 
             glBindVertexArray(board_vao);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 6 for 2 triangles, 3 indices per each
@@ -85,7 +86,7 @@ int main()
         if (imgui_data.show_pawn)
         {
             pawn_program.use();
-            pawn_program.uniforms(pawn_model, view, projection, light_position);
+            pawn_program.uniforms(light_position, pawn_model, view, projection);
 
             glBindVertexArray(pawn_vao);
             glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);

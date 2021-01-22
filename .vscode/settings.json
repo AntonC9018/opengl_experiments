@@ -6,6 +6,7 @@
         "xtree": "cpp",
         "algorithm": "cpp",
         "type_traits": "cpp",
-        "xmemory": "cpp"
+        "xmemory": "cpp",
+        "iosfwd": "cpp"
     }
 }
