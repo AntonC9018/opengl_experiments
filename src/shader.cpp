@@ -2,6 +2,7 @@
 
 #include "shader.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 // WARNING: could write to bytes after the buffer, no bound checks are being performed!
 // returns -1 if something went wrong.
@@ -22,6 +23,11 @@ int read_entire_file(const char *fname, char *buffer)
     buffer[i] = 0;
     fclose(vertex_shader_file);
     return 0;
+}
+
+void crash()
+{
+    exit(-1);
 }
 
 #define MAX_SHADER_FILE_SIZE 2048
@@ -71,28 +77,28 @@ uint32_t load_shader(const char *fname, GLenum shader_type)
 
 uint32_t create_shader_program(const char *vertex_filename, const char *fragment_filename)
 {
-    uint32_t shader_program = glCreateProgram();
+    uint32_t program_id = glCreateProgram();
     uint32_t vertex_shader = load_shader(vertex_filename, GL_VERTEX_SHADER);
     if (!vertex_shader)
     {
-        return 0;
+        crash();
     }
     uint32_t fragment_shader = load_shader(fragment_filename, GL_FRAGMENT_SHADER);
     if (!fragment_shader)
     {
-        return 0;
+        crash();
     }
-    glAttachShader(shader_program, fragment_shader);
-    glAttachShader(shader_program, vertex_shader);
-    glLinkProgram(shader_program);
+    glAttachShader(program_id, fragment_shader);
+    glAttachShader(program_id, vertex_shader);
+    glLinkProgram(program_id);
 
-    if (maybe_log_shader_error(shader_program, GL_LINK_STATUS))
+    if (maybe_log_shader_error(program_id, GL_LINK_STATUS))
     {
-        return 0;
+        crash();
     }
 
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
 
-    return shader_program;
+    return program_id;
 }

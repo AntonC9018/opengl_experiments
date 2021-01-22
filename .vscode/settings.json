@@ -4,6 +4,8 @@
         "vector": "cpp",
         "xhash": "cpp",
         "xtree": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "type_traits": "cpp",
+        "xmemory": "cpp"
     }
 }

@@ -14,6 +14,7 @@
 #define local_persistent static
 #include "rgb.h"
 #include "shader.h"
+#include "shader_programs.h"
 #include "imgui_stuff.h"
 #include "gl_init.h"
 #include "image_saving.h"
@@ -28,13 +29,19 @@ int main()
 
     float board_dimension = 8.0f;
     uint32_t board_vao = create_board_vao(board_dimension);
-    uint32_t board_shader_program = create_shader_program("shader_src/grid.vs", "shader_src/grid.fs");
+    uint32_t board_shader_program_id = create_shader_program("shader_src/grid.vs", "shader_src/grid.fs");
+    Board_Program board_program;
+    board_program.id = board_shader_program_id;
+    board_program.set_locations();
 
     Imgui_Data imgui_data = {{0.2f, 0.3f, 0.2f, 1.0f}, 0.5f, 1, 0, false, true, 5.0f, glm::identity<glm::quat>(), 50.0f};
 
     uint32_t pawn_vao = create_pawn_vao(imgui_data.max_triangles);
-    uint32_t pawn_shader_program = create_shader_program("shader_src/generic.vs", "shader_src/generic.fs");
-    imgui_data.num_triangles = imgui_data.max_triangles;    
+    uint32_t pawn_shader_program_id = create_shader_program("shader_src/generic.vs", "shader_src/generic.fs");
+    imgui_data.num_triangles = imgui_data.max_triangles;
+    Pawn_Program pawn_program;
+    pawn_program.id = pawn_shader_program_id;
+    pawn_program.set_locations();    
 
     // The Render Loop
     while (!glfwWindowShouldClose(window))
@@ -68,19 +75,8 @@ int main()
 
         if (imgui_data.show_grid)
         {
-            glUseProgram(board_shader_program);
-
-            auto model_loc = glGetUniformLocation(board_shader_program, "model");
-            auto view_loc = glGetUniformLocation(board_shader_program, "view");
-            auto projection_loc = glGetUniformLocation(board_shader_program, "projection");
-            auto light_position_loc = glGetUniformLocation(board_shader_program, "light_position");
-            auto board_dimension_loc = glGetUniformLocation(board_shader_program, "board_dimension");
-
-            glUniform1f(board_dimension_loc, board_dimension); 
-            glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)&board_model); 
-            glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)&view); 
-            glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)&projection);
-            glUniform3fv(light_position_loc, 1, (float*)&light_position);
+            board_program.use();
+            board_program.uniforms(board_model, view, projection, light_position, board_dimension);
 
             glBindVertexArray(board_vao);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 6 for 2 triangles, 3 indices per each
@@ -88,17 +84,8 @@ int main()
 
         if (imgui_data.show_pawn)
         {
-            glUseProgram(pawn_shader_program);
-
-            auto model_loc = glGetUniformLocation(pawn_shader_program, "model");
-            auto view_loc = glGetUniformLocation(pawn_shader_program, "view");
-            auto projection_loc = glGetUniformLocation(pawn_shader_program, "projection");
-            auto light_position_loc = glGetUniformLocation(pawn_shader_program, "light_position");
-
-            glUniformMatrix4fv(model_loc, 1, GL_FALSE, (float*)&pawn_model); 
-            glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float*)&view); 
-            glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float*)&projection);
-            glUniform3fv(light_position_loc, 1, (float*)&light_position);
+            pawn_program.use();
+            pawn_program.uniforms(pawn_model, view, projection, light_position);
 
             glBindVertexArray(pawn_vao);
             glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);
