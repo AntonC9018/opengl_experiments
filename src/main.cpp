@@ -31,18 +31,18 @@ int main()
     float board_dimension = 8.0f;
     uint32_t board_vao = create_board_vao(board_dimension);
     uint32_t board_shader_program_id = create_shader_program("shader_src/grid.vs", "shader_src/grid.fs");
-    Grid_Shader board_program;
+    Grid_Program board_program;
     board_program.id = board_shader_program_id;
-    board_program.set_locations();
+    board_program.query_locations();
 
     Imgui_Data imgui_data = {{0.2f, 0.3f, 0.2f, 1.0f}, 0.5f, 1, 0, false, true, 5.0f, glm::identity<glm::quat>(), 50.0f};
 
     uint32_t pawn_vao = create_pawn_vao(imgui_data.max_triangles);
     uint32_t pawn_shader_program_id = create_shader_program("shader_src/generic.vs", "shader_src/generic.fs");
     imgui_data.num_triangles = imgui_data.max_triangles;
-    Generic_Shader pawn_program;
+    Generic_Program pawn_program;
     pawn_program.id = pawn_shader_program_id;
-    pawn_program.set_locations();    
+    pawn_program.query_locations();    
 
     // The Render Loop
     while (!glfwWindowShouldClose(window))
@@ -87,7 +87,8 @@ int main()
         {
             pawn_program.use();
             pawn_program.uniforms(light_position, pawn_model, view, projection);
-
+            glEnable(GL_CULL_FACE); 
+            // glCullFace(GL_FRONT_AND_BACK); 
             glBindVertexArray(pawn_vao);
             glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);
             // glDrawArrays(GL_TRIANGLES, 0, imgui_data.num_triangles * 3);
