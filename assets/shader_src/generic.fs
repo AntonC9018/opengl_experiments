@@ -5,8 +5,8 @@ in vec3 position;
 
 layout (std140) uniform Camera_View_Projection
 {
-    mat4 view;
     mat4 projection;
+    mat4 view;
 };
 
 uniform vec3 light_position;

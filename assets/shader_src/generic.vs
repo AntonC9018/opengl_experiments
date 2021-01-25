@@ -4,8 +4,8 @@ layout (location = 1) in vec3 aNormal;
 
 layout (std140) uniform Camera_View_Projection
 {
-    mat4 view;
     mat4 projection;
+    mat4 view;
 };
 
 uniform mat4 model;
