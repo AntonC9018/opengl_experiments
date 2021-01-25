@@ -55,7 +55,6 @@ int main()
     pawn_program.query_locations();
     pawn_program.Camera_View_Projection_block(vp_block);
 
-
     // The Render Loop
     while (!glfwWindowShouldClose(window))
     {
@@ -84,7 +83,6 @@ int main()
         if (imgui_data.show_grid)
         {
             glBindVertexArray(board_vao);
-            vp_block.bind();
 
             auto board_model = glm::toMat4(imgui_data.pawn_rotation);
             board_model = glm::translate(board_model, glm::vec3(-0.5, -0.5, 0));
@@ -99,9 +97,8 @@ int main()
         if (imgui_data.show_pawn)
         {
             glBindVertexArray(pawn_vao);
-            vp_block.bind();
             
-            imgui_data.pawn_rotation = glm::normalize(imgui_data.pawn_rotation);
+            // imgui_data.pawn_rotation = glm::normalize(imgui_data.pawn_rotation);
             auto pawn_model = glm::toMat4(imgui_data.pawn_rotation);
             pawn_model = glm::scale(pawn_model, glm::vec3(imgui_data.pawn_scale));
 
@@ -112,6 +109,8 @@ int main()
             // glCullFace(GL_FRONT_AND_BACK); 
             glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);
         }
+
+        imgui_data.pawn_rotation.x += 0.001f;
 
         do_imgui_stuff(&imgui_data);
 
