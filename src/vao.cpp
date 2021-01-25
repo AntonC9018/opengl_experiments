@@ -65,7 +65,7 @@ uint32_t max(uint32_t* array, size_t size)
     return m;
 }
 
-uint32_t create_pawn_vao(int32_t &triangle_count)
+uint32_t create_pawn_vao(int32_t* triangle_count)
 {
     uint32_t pawn_vao;
     glGenVertexArrays(1, &pawn_vao);
@@ -130,7 +130,7 @@ uint32_t create_pawn_vao(int32_t &triangle_count)
         hmfree(index_map);
 
         // number of faces
-        triangle_count = (uint32_t)num_indices / 3;
+        *triangle_count = (uint32_t)num_indices / 3;
 
         uint32_t vbo, ebo;
         glGenBuffers(1, &vbo);
@@ -144,7 +144,7 @@ uint32_t create_pawn_vao(int32_t &triangle_count)
         glEnableVertexAttribArray(1);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * 4, indices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_indices * 4, indices.data(), GL_STATIC_DRAW);
     }
 
     return pawn_vao;

@@ -2,6 +2,7 @@
 in vec2 initial_position;
 in vec3 position;
 in vec3 normal;
+
 uniform float board_dimension; 
 uniform vec3 light_position;
 

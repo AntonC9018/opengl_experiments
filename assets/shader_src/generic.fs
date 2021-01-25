@@ -1,7 +1,15 @@
 #version 330 core
-uniform vec3 light_position;
+
 in vec3 normal;
 in vec3 position;
+
+layout (std140) uniform Camera_View_Projection
+{
+    mat4 view;
+    mat4 projection;
+};
+
+uniform vec3 light_position;
 
 void main()
 {

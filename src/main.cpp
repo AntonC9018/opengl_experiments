@@ -2,7 +2,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include "glm/gtc/matrix_transform.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/quaternion.hpp>
 // C stuff
@@ -28,21 +29,32 @@ int main()
     GLFWwindow* window = init_gl_with_window({ 800, 800, "GLFW window" });
     configure_imgui(window);
 
+    Camera_View_Projection_Block vp_block;
+    vp_block.create(1);
+
     float board_dimension = 8.0f;
     uint32_t board_vao = create_board_vao(board_dimension);
-    uint32_t board_shader_program_id = create_shader_program("shader_src/grid.vs", "shader_src/grid.fs");
     Grid_Program board_program;
-    board_program.id = board_shader_program_id;
+    board_program.id = create_shader_program("shader_src/grid.vs", "shader_src/grid.fs");
     board_program.query_locations();
+    board_program.Camera_View_Projection_block(vp_block);
 
-    Imgui_Data imgui_data = {{0.2f, 0.3f, 0.2f, 1.0f}, 0.5f, 1, 0, false, true, 5.0f, glm::identity<glm::quat>(), 50.0f};
+    Imgui_Data imgui_data;
+    imgui_data.background_color = {0.2f, 0.3f, 0.2f, 1.0f};
+    imgui_data.distance_to_pawn = 0.5f;
+    imgui_data.show_grid = false;
+    imgui_data.show_pawn = true;
+    imgui_data.fov = 50.0f;
+    imgui_data.pawn_rotation = glm::identity<glm::quat>();
+    imgui_data.pawn_scale = 1;
 
-    uint32_t pawn_vao = create_pawn_vao(imgui_data.max_triangles);
-    uint32_t pawn_shader_program_id = create_shader_program("shader_src/generic.vs", "shader_src/generic.fs");
+    uint32_t pawn_vao = create_pawn_vao(&imgui_data.max_triangles);
     imgui_data.num_triangles = imgui_data.max_triangles;
     Generic_Program pawn_program;
-    pawn_program.id = pawn_shader_program_id;
-    pawn_program.query_locations();    
+    pawn_program.id = create_shader_program("shader_src/generic.vs", "shader_src/generic.fs");
+    pawn_program.query_locations();
+    pawn_program.Camera_View_Projection_block(vp_block);
+
 
     // The Render Loop
     while (!glfwWindowShouldClose(window))
@@ -59,39 +71,46 @@ int main()
 
         glEnable(GL_DEPTH_TEST);
 
-        imgui_data.pawn_rotation = glm::normalize(imgui_data.pawn_rotation);
-        auto pawn_model = glm::toMat4(imgui_data.pawn_rotation);
-        pawn_model = glm::scale(pawn_model, glm::vec3(imgui_data.pawn_scale));
-
-        auto board_model = glm::toMat4(imgui_data.pawn_rotation);
-        board_model = glm::translate(board_model, glm::vec3(-0.5, -0.5, 0));
-        board_model = glm::scale(board_model, glm::vec3(1/board_dimension));
-        
         auto view = glm::mat4(1.0f);
         view = glm::translate(view, glm::vec3(0.0f, 0.0f, -imgui_data.distance_to_pawn));
-
         auto projection = glm::perspective(glm::radians(imgui_data.fov), 1.0f, 0.1f, 100.0f);
-        auto light_position = glm::vec3(0.0f, 10.0f, 0.0f);
+        
+        vp_block.bind();
+        vp_block.view(view);
+        vp_block.projection(projection);
 
+        auto light_position = glm::vec3(0.0f, 10.0f, 0.0f);
 
         if (imgui_data.show_grid)
         {
-            board_program.use();
-            board_program.uniforms(board_dimension, light_position, board_model, view, projection);
-
             glBindVertexArray(board_vao);
+            vp_block.bind();
+
+            auto board_model = glm::toMat4(imgui_data.pawn_rotation);
+            board_model = glm::translate(board_model, glm::vec3(-0.5, -0.5, 0));
+            board_model = glm::scale(board_model, glm::vec3(1/board_dimension));
+            
+            board_program.use();
+            board_program.uniforms(board_dimension, light_position, board_model);
+
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 6 for 2 triangles, 3 indices per each
         }
 
         if (imgui_data.show_pawn)
         {
-            pawn_program.use();
-            pawn_program.uniforms(light_position, pawn_model, view, projection);
-            glEnable(GL_CULL_FACE); 
-            // glCullFace(GL_FRONT_AND_BACK); 
             glBindVertexArray(pawn_vao);
+            vp_block.bind();
+            
+            imgui_data.pawn_rotation = glm::normalize(imgui_data.pawn_rotation);
+            auto pawn_model = glm::toMat4(imgui_data.pawn_rotation);
+            pawn_model = glm::scale(pawn_model, glm::vec3(imgui_data.pawn_scale));
+
+            pawn_program.use();
+            pawn_program.uniforms(light_position, pawn_model);
+
+            // glEnable(GL_CULL_FACE); 
+            // glCullFace(GL_FRONT_AND_BACK); 
             glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);
-            // glDrawArrays(GL_TRIANGLES, 0, imgui_data.num_triangles * 3);
         }
 
         do_imgui_stuff(&imgui_data);

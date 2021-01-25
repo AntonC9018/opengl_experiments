@@ -43,7 +43,7 @@ void do_imgui_stuff(Imgui_Data *imgui_data)
 
     {
         ImGui::Begin("Chess");
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Text("Average FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Checkbox("Show grid", &imgui_data->show_grid);
         ImGui::SliderFloat("Pawn Scale", &imgui_data->pawn_scale, 0.0f, 1.0f);
         ImGui::SliderFloat4("Pawn Rotation: ", (float*)&imgui_data->pawn_rotation, -1.0f, 1.0f);
