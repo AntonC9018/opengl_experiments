@@ -22,7 +22,7 @@ uint32_t create_board_vao(float board_dimension)
 
     uint32_t indices[] = {
         0, 1, 2,
-        2, 3, 4
+        2, 3, 0
     };
 
     uint32_t vbo, ebo;

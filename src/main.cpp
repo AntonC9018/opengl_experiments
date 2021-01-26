@@ -41,7 +41,7 @@ int main()
 
     Imgui_Data imgui_data;
     imgui_data.background_color = {0.2f, 0.3f, 0.2f, 1.0f};
-    imgui_data.distance_to_pawn = 0.5f;
+    imgui_data.distance_to_pawn = 5.0f;
     imgui_data.show_grid = false;
     imgui_data.show_pawn = true;
     imgui_data.fov = 50.0f;
@@ -90,7 +90,8 @@ int main()
             
             board_program.use();
             board_program.uniforms(board_dimension, light_position, board_model);
-
+            
+            glDisable(GL_CULL_FACE); 
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 6 for 2 triangles, 3 indices per each
         }
 
@@ -98,15 +99,14 @@ int main()
         {
             glBindVertexArray(pawn_vao);
             
-            // imgui_data.pawn_rotation = glm::normalize(imgui_data.pawn_rotation);
+            imgui_data.pawn_rotation = glm::normalize(imgui_data.pawn_rotation);
             auto pawn_model = glm::toMat4(imgui_data.pawn_rotation);
             pawn_model = glm::scale(pawn_model, glm::vec3(imgui_data.pawn_scale));
 
             pawn_program.use();
             pawn_program.uniforms(light_position, pawn_model);
 
-            // glEnable(GL_CULL_FACE); 
-            // glCullFace(GL_FRONT_AND_BACK); 
+            glEnable(GL_CULL_FACE); 
             glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);
         }
 

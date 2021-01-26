@@ -10,14 +10,13 @@ struct Imgui_Data
 {
     RGBA background_color;
     float pawn_scale;
-    int32_t num_triangles;
-    int32_t max_triangles;
+    int num_triangles;
+    int max_triangles;
     bool show_grid;
     bool show_pawn;
-
-    float fov;               // 0
-    glm::quat pawn_rotation; // 4x0
-    float distance_to_pawn;  // trash
+    float fov;               
+    glm::quat pawn_rotation; 
+    float distance_to_pawn;  
 };
 
 void configure_imgui(GLFWwindow *window);
