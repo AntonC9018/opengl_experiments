@@ -132,17 +132,15 @@ int main()
     camera.fov = glm::radians(50.0f);
     camera.clip_near = 0.1f;
     camera.clip_far = 1000.0f;
-    camera.transform.rotation = glm::identity<glm::quat>();
     camera.transform.scale = glm::vec3(1.0f);
-    camera.transform.position = glm::vec3(10.0f, 0.0f, 0.0f);
+    camera.transform.position = glm::vec3(0.0f, -5.0f, 0.0f);
+    camera.look_at(pawn.transform.position);
 
     Imgui_Data imgui_data;
     imgui_data.background_color = {0.2f, 0.3f, 0.2f, 1.0f};
     imgui_data.camera = &camera;
     imgui_data.pawn = &pawn;
     imgui_data.grid = &grid;
-
-    camera.look_at(pawn.transform.position);
 
     // The Render Loop
     while (!glfwWindowShouldClose(window))

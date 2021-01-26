@@ -58,27 +58,12 @@ struct Camera
     {
         return glm::perspective(fov, viewport_width / viewport_height, clip_near, clip_far);
     }
-    inline void look_at(glm::vec3 position)
-    {
-        glm::vec3  direction       = position - transform.position;
-        float      directionLength = glm::length(direction);
-        glm::vec3 up(0.0f, 1.0f, 0.0f);
 
-        // Check if the direction is valid; Also deals with NaN
-        if(!(directionLength > 0.0001f))
-            return;
+    void look_at(glm::vec3 point);
 
-        direction /= directionLength;
-
-        // Is the normal up (nearly) parallel to direction?
-        if (glm::abs(glm::dot(direction, up)) > 0.9999f) 
-            return;
-
-        transform.rotation = glm::normalize(glm::quatLookAt(direction, up));
-    }
     inline void rotate(float angle, glm::vec3 axis) 
     { 
-        transform.rotation *= glm::angleAxis(angle, axis * transform.rotation); 
+        transform.rotation = transform.rotation * glm::normalize(glm::angleAxis(angle, axis * transform.rotation)); 
     }
 	inline void yaw(float angle) 
     { 
