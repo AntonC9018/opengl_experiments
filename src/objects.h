@@ -71,8 +71,10 @@ struct Camera
         direction /= directionLength;
 
         // Is the normal up (nearly) parallel to direction?
-        if (!glm::abs(glm::dot(direction, up)) > 0.9999f) 
-            transform.rotation = glm::normalize(glm::quatLookAt(direction, up));
+        if (glm::abs(glm::dot(direction, up)) > 0.9999f) 
+            return;
+
+        transform.rotation = glm::normalize(glm::quatLookAt(direction, up));
     }
     inline void rotate(float angle, glm::vec3 axis) 
     { 
