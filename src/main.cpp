@@ -69,7 +69,10 @@ void move_camera_based_on_input(GLFWwindow* window, Camera* camera)
         camera->transform.translate(glm::vec3(0.0f, camera_speed, 0.0f));
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         camera->transform.translate(glm::vec3(0.0f, -camera_speed, 0.0f));
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE)
+
+    local_persistent bool just_started_pressing = false;
+
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && just_started_pressing)
     {
         if (respond_to_mouse)
         {
@@ -82,6 +85,11 @@ void move_camera_based_on_input(GLFWwindow* window, Camera* camera)
             respond_to_mouse = true;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
+        just_started_pressing = false;
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE)
+    {
+        just_started_pressing = true;
     }
 }
 
