@@ -1,5 +1,34 @@
 #pragma once
-#include <stdint.h>
+#include "defines.h"
+#include "descriptors/generic.h"
+#include "descriptors/grid.h"
 
-uint32_t create_board_vao(float board_dimension);
-uint32_t create_pawn_vao(int32_t *triangle_count);
+struct Pawn_Vao
+{
+    uint32 id;
+    int32 num_triangles;
+    Generic_Program program;
+    
+    inline void bind()
+    {
+        glBindVertexArray(id);
+        program.use();
+    };
+    void load_shaders(Camera_View_Projection_Block vp_block);
+    void load_model();
+};
+
+struct Grid_Vao
+{
+    uint32 id;
+    Grid_Program program;
+    float board_dimension;
+
+    inline void bind()
+    {
+        glBindVertexArray(id);
+        program.use();
+    };
+    void load_shaders(Camera_View_Projection_Block vp_block);
+    void load_model();
+};

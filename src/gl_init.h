@@ -1,6 +1,9 @@
 #pragma once
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "objects.h"
+
+extern Camera camera;
 
 struct Window_Data
 {

@@ -152,6 +152,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\vao.cpp" />
+    <ClCompile Include="src\objects.cpp" />
     <ClCompile Include="..\includes\glad.c" />
     <ClCompile Include="..\includes\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="..\includes\imgui\backends\imgui_impl_opengl3.cpp" />

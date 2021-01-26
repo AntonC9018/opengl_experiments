@@ -1,26 +1,89 @@
 // GLFW
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/quaternion.hpp>
 // C stuff
 #include <direct.h>
-#include <stdlib.h>
 #include <stdio.h>
 // My stuff
-#define internal static
-#define local_persistent static
+#include "defines.h"
 #include "rgb.h"
-#include "shader.h"
-#include "descriptors/generic.h"
-#include "descriptors/grid.h"
 #include "imgui_stuff.h"
 #include "gl_init.h"
 #include "image_saving.h"
-#include "vao.h"
+#include "objects.h"
+
+extern Camera camera;
+global bool first_mouse = true;
+global bool respond_to_mouse = false;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    local_persistent glm::vec2 last; 
+
+    if (!respond_to_mouse)
+    {
+        return;
+    }
+    if (first_mouse)
+    {
+        last.x = (float)xpos;
+        last.y = (float)ypos;
+        first_mouse = false;
+    }
+    float xoffset = (float)xpos - last.x;
+    float yoffset = (float)ypos - last.y; 
+    last.x = (float)xpos;
+    last.y = (float)ypos;
+
+    float sensitivity = 0.002f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    // This introduces roll due to floating point error. TODO: Use euler angles?
+    camera.yaw(xoffset);
+    camera.pitch(yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    const float zoom_speed = 0.1f;
+    camera.fov = glm::clamp(camera.fov - (float)yoffset * (float)zoom_speed, 
+        0.05f, glm::three_over_two_pi<float>());
+}
+
+void move_camera_based_on_input(GLFWwindow* window, Camera* camera)
+{
+    const float camera_speed = 0.05f;
+    
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera->transform.translate(glm::vec3(0.0f, 0.0f, camera_speed));
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera->transform.translate(glm::vec3(camera_speed, 0.0f, 0.0f));
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera->transform.translate(glm::vec3(0.0f, 0.0f, -camera_speed));
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera->transform.translate(glm::vec3(-camera_speed, 0.0f, 0.0f));
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        camera->transform.translate(glm::vec3(0.0f, camera_speed, 0.0f));
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera->transform.translate(glm::vec3(0.0f, -camera_speed, 0.0f));
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_RELEASE)
+    {
+        if (respond_to_mouse)
+        {
+            respond_to_mouse = false;
+            first_mouse = true;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        else
+        {
+            respond_to_mouse = true;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+    }
+}
 
 int main()
 {
@@ -29,37 +92,53 @@ int main()
     GLFWwindow* window = init_gl_with_window({ 800, 800, "GLFW window" });
     configure_imgui(window);
 
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
     Camera_View_Projection_Block vp_block;
     vp_block.create(1);
 
-    float board_dimension = 8.0f;
-    uint32_t board_vao = create_board_vao(board_dimension);
-    Grid_Program board_program;
-    board_program.id = create_shader_program("shader_src/grid.vs", "shader_src/grid.fs");
-    board_program.query_locations();
-    board_program.Camera_View_Projection_block(vp_block);
+    Pawn_Vao pawn_vao;
+    pawn_vao.load_model();
+    pawn_vao.load_shaders(vp_block);
+
+    Pawn pawn;
+    pawn.vao = &pawn_vao;
+    pawn.is_visible = true;
+    pawn.transform.reset();
+    pawn.num_visible_triangles = pawn_vao.num_triangles;
+
+    Grid_Vao grid_vao;
+    grid_vao.board_dimension = 8.0f;
+    grid_vao.load_model();
+    grid_vao.load_shaders(vp_block);
+
+    Grid grid;
+    grid.vao = &grid_vao;
+    grid.is_visible = false;
+    grid.transform.reset();
+    grid.transform.position = { 0.0f, 0.0f, 0.0f };
+
+    // Camera camera; I have defined a global camera in window
+    camera.fov = glm::radians(50.0f);
+    camera.clip_near = 0.1f;
+    camera.clip_far = 1000.0f;
+    camera.transform.rotation = glm::identity<glm::quat>();
+    camera.transform.scale = glm::vec3(1.0f);
+    camera.transform.position = glm::vec3(10.0f, 0.0f, 0.0f);
 
     Imgui_Data imgui_data;
     imgui_data.background_color = {0.2f, 0.3f, 0.2f, 1.0f};
-    imgui_data.distance_to_pawn = 5.0f;
-    imgui_data.show_grid = false;
-    imgui_data.show_pawn = true;
-    imgui_data.fov = 50.0f;
-    imgui_data.pawn_rotation = glm::identity<glm::quat>();
-    imgui_data.pawn_scale = 1;
+    imgui_data.camera = &camera;
+    imgui_data.pawn = &pawn;
+    imgui_data.grid = &grid;
 
-    uint32_t pawn_vao = create_pawn_vao(&imgui_data.max_triangles);
-    imgui_data.num_triangles = imgui_data.max_triangles;
-    Generic_Program pawn_program;
-    pawn_program.id = create_shader_program("shader_src/generic.vs", "shader_src/generic.fs");
-    pawn_program.query_locations();
-    pawn_program.Camera_View_Projection_block(vp_block);
+    camera.look_at(pawn.transform.position);
 
     // The Render Loop
     while (!glfwWindowShouldClose(window))
     {
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
         glClearColor(
             imgui_data.background_color.r, 
             imgui_data.background_color.g, 
@@ -70,47 +149,16 @@ int main()
 
         glEnable(GL_DEPTH_TEST);
 
-        auto view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -imgui_data.distance_to_pawn));
-        auto projection = glm::perspective(glm::radians(imgui_data.fov), 1.0f, 0.1f, 100.0f);
+        move_camera_based_on_input(window, &camera);
         
         vp_block.bind();
-        vp_block.view(view);
-        vp_block.projection(projection);
+        vp_block.view(camera.get_view());
+        vp_block.projection(camera.get_projection());
 
-        auto light_position = glm::vec3(0.0f, 10.0f, 0.0f);
+        pawn.transform.rotation = glm::normalize(pawn.transform.rotation);
+        pawn.draw();
 
-        if (imgui_data.show_grid)
-        {
-            glBindVertexArray(board_vao);
-
-            auto board_model = glm::toMat4(imgui_data.pawn_rotation);
-            board_model = glm::translate(board_model, glm::vec3(-0.5, -0.5, 0));
-            board_model = glm::scale(board_model, glm::vec3(1/board_dimension));
-            
-            board_program.use();
-            board_program.uniforms(board_dimension, light_position, board_model);
-            
-            glDisable(GL_CULL_FACE); 
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 6 for 2 triangles, 3 indices per each
-        }
-
-        if (imgui_data.show_pawn)
-        {
-            glBindVertexArray(pawn_vao);
-            
-            imgui_data.pawn_rotation = glm::normalize(imgui_data.pawn_rotation);
-            auto pawn_model = glm::toMat4(imgui_data.pawn_rotation);
-            pawn_model = glm::scale(pawn_model, glm::vec3(imgui_data.pawn_scale));
-
-            pawn_program.use();
-            pawn_program.uniforms(light_position, pawn_model);
-
-            glEnable(GL_CULL_FACE); 
-            glDrawElements(GL_TRIANGLES, imgui_data.num_triangles * 3, GL_UNSIGNED_INT, 0);
-        }
-
-        imgui_data.pawn_rotation.x += 0.001f;
+        grid.draw();
 
         do_imgui_stuff(&imgui_data);
 

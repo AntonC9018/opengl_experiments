@@ -33,7 +33,7 @@ void crash()
 #define MAX_SHADER_FILE_SIZE 2048
 #define GL_ERROR_LOG_LENGTH 2048
 
-bool maybe_log_shader_error(uint32_t shader, GLenum error_type)
+bool maybe_log_shader_error(uint32 shader, GLenum error_type)
 {
     char log_buffer[GL_ERROR_LOG_LENGTH];
     int success;
@@ -50,9 +50,9 @@ bool maybe_log_shader_error(uint32_t shader, GLenum error_type)
 
 // returns 0 if not successful
 // otherwise, returns the id of the created shader
-uint32_t load_shader(const char *fname, GLenum shader_type)
+uint32 load_shader(const char *fname, GLenum shader_type)
 {
-    uint32_t shader = glCreateShader(shader_type);
+    uint32 shader = glCreateShader(shader_type);
 
     {
         char source_buffer[MAX_SHADER_FILE_SIZE];
@@ -75,15 +75,15 @@ uint32_t load_shader(const char *fname, GLenum shader_type)
     return shader;
 }
 
-uint32_t create_shader_program(const char *vertex_filename, const char *fragment_filename)
+uint32 create_shader_program(const char *vertex_filename, const char *fragment_filename)
 {
-    uint32_t program_id = glCreateProgram();
-    uint32_t vertex_shader = load_shader(vertex_filename, GL_VERTEX_SHADER);
+    uint32 program_id = glCreateProgram();
+    uint32 vertex_shader = load_shader(vertex_filename, GL_VERTEX_SHADER);
     if (!vertex_shader)
     {
         crash();
     }
-    uint32_t fragment_shader = load_shader(fragment_filename, GL_FRAGMENT_SHADER);
+    uint32 fragment_shader = load_shader(fragment_filename, GL_FRAGMENT_SHADER);
     if (!fragment_shader)
     {
         crash();

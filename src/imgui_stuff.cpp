@@ -44,13 +44,13 @@ void do_imgui_stuff(Imgui_Data *imgui_data)
     {
         ImGui::Begin("Chess");
         ImGui::Text("Average FPS: %.1f", ImGui::GetIO().Framerate);
-        ImGui::Checkbox("Show grid", &imgui_data->show_grid);
-        ImGui::Checkbox("Show pawn", &imgui_data->show_pawn);
-        ImGui::SliderFloat("Pawn Scale", &imgui_data->pawn_scale, 0.0f, 1.0f);
-        ImGui::SliderFloat4("Pawn Rotation: ", (float*)&imgui_data->pawn_rotation, -1.0f, 1.0f);
-        ImGui::SliderInt("Pawn triangle count", &imgui_data->num_triangles, 1, imgui_data->max_triangles);
-        ImGui::SliderFloat("Distance to pawn", &imgui_data->distance_to_pawn, 0.0f, 15.0f);
-        ImGui::SliderFloat("FOV", &imgui_data->fov, 0.0f, 180.0f);
+        ImGui::Checkbox("Show grid", &imgui_data->grid->is_visible);
+        ImGui::Checkbox("Show pawn", &imgui_data->pawn->is_visible);
+        ImGui::SliderFloat3("Pawn Scale", &imgui_data->pawn->transform.scale[0], 0.0f, 1.0f);
+        ImGui::SliderFloat4("Pawn Rotation: ", &imgui_data->pawn->transform.rotation[0], -1.0f, 1.0f);
+        ImGui::SliderInt("Pawn triangle count", &imgui_data->pawn->num_visible_triangles, 1, imgui_data->pawn->vao->num_triangles);
+        // ImGui::SliderFloat("Distance to pawn", &imgui_data->distance_to_pawn, 0.0f, 15.0f);
+        // ImGui::SliderFloat("FOV", &imgui_data->camera->fov, 0.0f, 180.0f);
         ImGui::ColorEdit3("Clear Color", &imgui_data->background_color.r);
         ImGui::End();
     }

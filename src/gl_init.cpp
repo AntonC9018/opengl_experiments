@@ -3,6 +3,8 @@
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
+    camera.viewport_width = width;
+    camera.viewport_height = height;
     glViewport(0, 0, width, height);
 }
 
@@ -67,6 +69,8 @@ GLFWwindow* init_gl_with_window(Window_Data initial_data)
     int actual_window_width, actual_window_height;
     glfwGetWindowSize(window, &actual_window_width, &actual_window_height);
     glViewport(0, 0, actual_window_width, actual_window_height);
+    camera.viewport_height = actual_window_height;
+    camera.viewport_width = actual_window_width;
     
     return window;
 }

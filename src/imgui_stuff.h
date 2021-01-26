@@ -4,19 +4,15 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <glm/gtc/quaternion.hpp>
+#include "objects.h"
 #include "rgb.h"
 
 struct Imgui_Data
 {
     RGBA background_color;
-    float pawn_scale;
-    int num_triangles;
-    int max_triangles;
-    bool show_grid;
-    bool show_pawn;
-    float fov;               
-    glm::quat pawn_rotation; 
-    float distance_to_pawn;  
+    Pawn* pawn;
+    Grid* grid;
+    Camera* camera;
 };
 
 void configure_imgui(GLFWwindow *window);
