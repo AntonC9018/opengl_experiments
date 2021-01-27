@@ -5,8 +5,8 @@
 
 struct Pawn_Vao
 {
-    uint32 id;
-    int32 num_triangles;
+    u32 id;
+    s32 num_triangles;
     Generic_Program program;
     
     inline void bind()
@@ -20,7 +20,7 @@ struct Pawn_Vao
 
 struct Grid_Vao
 {
-    uint32 id;
+    u32 id;
     Grid_Program program;
     float board_dimension;
 

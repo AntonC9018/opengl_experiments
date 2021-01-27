@@ -84,7 +84,7 @@ struct Pawn
     Pawn_Vao* vao;
     Transform transform;
     bool is_visible;
-    int32 num_visible_triangles;
+    s32 num_visible_triangles;
 
     void draw();
 };

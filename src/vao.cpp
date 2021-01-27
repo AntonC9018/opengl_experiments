@@ -19,13 +19,13 @@ struct Pawn_Vertex
 
 struct Pawn_Index
 {
-    uint32 vertex;
-    uint32 normal;
+    u32 vertex;
+    u32 normal;
 };
 
-uint32 max(uint32* array, size_t size)
+u32 max(u32* array, s64 size)
 {
-    uint32 m = 0;
+    u32 m = 0;
     for (int i = 0; i < size; i++)
     {
         if (m < array[i])
@@ -65,16 +65,16 @@ void Pawn_Vao::load_model()
     auto &shapes = reader.GetShapes();
 
     std::vector<Pawn_Vertex> vertices;
-    struct { Pawn_Index key; uint32 value; } *index_map = NULL;
-    std::vector<uint32> indices;
+    struct { Pawn_Index key; u32 value; } *index_map = NULL;
+    std::vector<u32> indices;
     size_t num_indices = shapes[0].mesh.indices.size();
     indices.reserve(num_indices);
-    uint32 next_index = 0;
+    u32 next_index = 0;
 
     for (int i = 0; i < num_indices; i++)
     {
         auto index = shapes[0].mesh.indices[i];
-        auto my_index = Pawn_Index{ (uint32)index.vertex_index, (uint32)index.normal_index };
+        auto my_index = Pawn_Index{ (u32)index.vertex_index, (u32)index.normal_index };
         auto key = hmgeti(index_map, my_index);
         if (key == -1)
         {
@@ -103,9 +103,9 @@ void Pawn_Vao::load_model()
     hmfree(index_map);
 
     // number of faces
-    num_triangles = (uint32)num_indices / 3;
+    num_triangles = (u32)num_indices / 3;
 
-    uint32 vbo, ebo;
+    u32 vbo, ebo;
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
 
@@ -131,12 +131,12 @@ void Grid_Vao::load_model()
         0.0f, board_dimension, 0.0f
     };
 
-    uint32 indices[] = {
+    u32 indices[] = {
         0, 1, 2,
         2, 3, 0
     };
 
-    uint32 vbo, ebo;
+    u32 vbo, ebo;
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
 
