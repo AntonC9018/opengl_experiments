@@ -97,11 +97,9 @@ int main()
 {
     _chdir("W:\\opengl_test\\assets");
 
-    GLFWwindow* window = init_gl_with_window({ 800, 800, "GLFW window" });
+    GLFWwindow* window = init_gl_with_window({ 800, 800, "GLFW window", mouse_callback, scroll_callback });
     configure_imgui(window);
 
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     Camera_View_Projection_Block vp_block;

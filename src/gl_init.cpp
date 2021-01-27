@@ -71,6 +71,11 @@ GLFWwindow* init_gl_with_window(Window_Data initial_data)
     glViewport(0, 0, actual_window_width, actual_window_height);
     camera.viewport_height = actual_window_height;
     camera.viewport_width = actual_window_width;
+
+    if (initial_data.mouse_callback != 0)
+        glfwSetCursorPosCallback(window, initial_data.mouse_callback);
+    if (initial_data.scroll_callback != 0)
+        glfwSetScrollCallback(window, initial_data.scroll_callback);
     
     return window;
 }

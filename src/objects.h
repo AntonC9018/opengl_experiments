@@ -12,8 +12,6 @@
 #include "descriptors/grid.h"
 #include "vao.h"
 
-global auto light_position = glm::vec3(0.0f, 10.0f, 0.0f);
-
 struct Transform
 {
     glm::quat rotation;
