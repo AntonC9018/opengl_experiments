@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #define internal static
-#define global static
 #define local_persistent static
 typedef size_t u64; 
 typedef uint32_t u32; 

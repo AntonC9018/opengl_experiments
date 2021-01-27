@@ -13,8 +13,8 @@
 #include "objects.h"
 
 extern Camera camera;
-global bool first_mouse = true;
-global bool respond_to_mouse = false;
+internal bool first_mouse = true;
+internal bool respond_to_mouse = false;
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
